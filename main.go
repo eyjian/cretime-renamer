@@ -16,9 +16,12 @@ var (
 	// 指定文件目录，多个目录间已逗号分割
 	dirs = flag.String("dirs", "", "Directory to handle.")
 
-	createYearDir  = flag.Bool("create-year-dir", false, "Create directory by year.")
+	// 是否按年饭创建目录
+	createYearDir = flag.Bool("create-year-dir", false, "Create directory by year.")
+
+	// 是否按月份创建目录
+	// 如果 create-month-dir 为 true，则强制 create-year-dir 也为 true
 	createMonthDir = flag.Bool("create-month-dir", false, "Create directory by month.")
-	createDayDir   = flag.Bool("create-day-dir", false, "Create directory by day.")
 
 	// 指定需要处理的文件名后缀，如果为空表示处理所有的文件
 	suffixes = flag.String("suffixes", "", "File name suffixes that needs to be processed.")
