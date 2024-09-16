@@ -121,15 +121,15 @@ func rename(path, ext string, fi fs.FileInfo) {
 
 func getNewFilepath(fi fs.FileInfo, ext, dir string, idx int) (string, error) {
 	fileDir := dir
+	year := fi.ModTime().Format("20060102")
+	yearDir := fmt.Sprintf("%s%c%s", dir, filepath.Separator, year)
 	if *createYearDir {
-		year := fi.ModTime().Format("20060102")
-		yearDir := fmt.Sprintf("%s%c%s", dir, filepath.Separator, year)
-
 		exists, err := DirExists(yearDir)
 		if err != nil {
 			return "", err
 		}
 		if !exists {
+			err = os.Mkdir(yearDir, 0755)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Create directory `%s` error: %s\n", yearDir, err.Error())
 				return "", err
