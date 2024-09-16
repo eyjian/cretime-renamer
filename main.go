@@ -25,6 +25,11 @@ var (
 
 	// 指定需要处理的文件名后缀，如果为空表示处理所有的文件
 	suffixes = flag.String("suffixes", "", "File name suffixes that needs to be processed.")
+
+	// 是否在同级目录下创建年份目录
+	// 仅当 create-year-dir 或 create-month-dir 为 true 时有作用
+	// 如果为 false，则年份目录会创建在同文件同级的目录
+	siblingDirectory = flag.Bool("sibling-dir", false, "Create directory by year in the sibling directory.")
 )
 
 func main() {
@@ -135,7 +140,12 @@ func getNewFilepath(fi fs.FileInfo, ext, dir string, idx int) (string, error) {
 
 	if *createYearDir {
 		year := fi.ModTime().Format("2006")
-		fileDir = fmt.Sprintf("%s%c%s", dir, filepath.Separator, year)
+		baseDir := dir
+
+		if *siblingDirectory {
+			baseDir = filepath.Dir(baseDir)
+		}
+		fileDir = fmt.Sprintf("%s%c%s", baseDir, filepath.Separator, year)
 		exists, err := DirExists(fileDir)
 		if err != nil {
 			return "", err
@@ -150,7 +160,7 @@ func getNewFilepath(fi fs.FileInfo, ext, dir string, idx int) (string, error) {
 
 		if *createMonthDir {
 			yearMonth := fi.ModTime().Format("200601")
-			fileDir = fmt.Sprintf("%s%c%s%c%s", dir, filepath.Separator, year, filepath.Separator, yearMonth)
+			fileDir = fmt.Sprintf("%s%c%s%c%s", baseDir, filepath.Separator, year, filepath.Separator, yearMonth)
 			exists, err = DirExists(fileDir)
 			if err != nil {
 				return "", err
