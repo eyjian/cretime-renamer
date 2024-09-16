@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -41,7 +42,13 @@ func main() {
 				fmt.Fprintf(os.Stderr, "Read directory `%s` error: %s\n", path, err.Error())
 				return err
 			}
-			if d.Type().IsRegular() {
+			if d.Type().IsDir() {
+				leafDir := filepath.Base(filepath.Dir(path))
+				if IsValidYYYYMMDD(leafDir) {
+					fmt.Fprintf(os.Stderr, "Directory `%s` is skipped\n", path)
+					return filepath.SkipDir
+				}
+			} else if d.Type().IsRegular() {
 				ext := filepath.Ext(path)
 				if needProcess(ext) {
 					fi, err := d.Info()
@@ -170,4 +177,11 @@ func DirExists(path string) (bool, error) {
 	}
 	// 其他错误
 	return false, err
+}
+
+func IsValidYYYYMMDD(s string) bool {
+	// 正则表达式匹配 YYYY、YYYYMM 或 YYYYMMDD
+	pattern := `^(\d{4})(\d{2})(\d{2})?$`
+	re := regexp.MustCompile(pattern)
+	return re.MatchString(s)
 }
