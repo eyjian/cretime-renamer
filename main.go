@@ -107,5 +107,5 @@ func rename(path, ext string, fi fs.FileInfo) {
 }
 
 func getNewFilepath(fi fs.FileInfo, ext, dir string) string {
-	return fmt.Sprintf("%s%s.%s", dir, fi.ModTime().Format("20060102150405"), ext)
+	return fmt.Sprintf("%s/%s.%s", dir, fi.ModTime().Format("20060102150405"), ext)
 }
