@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -86,26 +87,47 @@ func needProcess(filename string) bool {
 
 func rename(path, ext string, fi fs.FileInfo) {
 	dir := filepath.Dir(path)
-	newPath := getNewFilepath(fi, ext, dir)
+	newPath := getNewFilepath(fi, ext, dir, 0)
 
-	i := 0
+	idx := 1
 	for {
-		err := os.Rename(path, newPath)
-		if err == nil {
-			fmt.Fprintf(os.Stdout, "Rename file `%s` to `%s` ok\n", path, newPath)
+		exists, err := PathExists(newPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Rename file `%s` to `%s` error: %s\n", path, newPath, err.Error())
+			return
+		}
+		if !exists {
 			break
 		} else {
-			if !os.IsExist(err) {
-				fmt.Fprintf(os.Stderr, "Rename file `%s` to `%s` error: %s\n", path, newPath, err.Error())
-				break
-			} else {
-				newPath = fmt.Sprintf("%s-%2d", newPath, i)
-				i++
-			}
+			newPath = getNewFilepath(fi, ext, dir, idx)
+			idx++
 		}
+	}
+
+	err := os.Rename(path, newPath)
+	if err == nil {
+		fmt.Fprintf(os.Stdout, "Rename file `%s` to `%s` ok\n", path, newPath)
+	} else {
+		fmt.Fprintf(os.Stderr, "Rename file `%s` to `%s` error: %s\n", path, newPath, err.Error())
 	}
 }
 
-func getNewFilepath(fi fs.FileInfo, ext, dir string) string {
-	return fmt.Sprintf("%s/%s.%s", dir, fi.ModTime().Format("20060102150405"), ext)
+func getNewFilepath(fi fs.FileInfo, ext, dir string, idx int) string {
+	if idx < 1 {
+		return fmt.Sprintf("%s/%s%s", dir, fi.ModTime().Format("20060102150405"), ext)
+	} else {
+		return fmt.Sprintf("%s/%s-%02d%s", dir, fi.ModTime().Format("20060102150405"), idx, ext)
+	}
+}
+
+func PathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err != nil {
+		var pathError *os.PathError
+		if errors.As(err, &pathError) && pathError.Op == "stat" && pathError.Err == os.ErrExist {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
