@@ -1,5 +1,6 @@
 // Package main
 // Wrote by yijian on 2024/09/15
+// 本工具用来处理手机和相机导出的照片和视频，使用相片和视频的创建时间作为文件名。
 package main
 
 import (
