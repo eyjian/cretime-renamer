@@ -138,7 +138,7 @@ func getNewFilepath(fi fs.FileInfo, ext, dir string, idx int) (string, error) {
 			return "", err
 		}
 		if !exists {
-			err = os.Mkdir(fileDir, 0755)
+			err = os.MkdirAll(fileDir, 0755)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Create directory `%s` error: %s\n", fileDir, err.Error())
 				return "", err
