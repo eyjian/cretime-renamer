@@ -48,7 +48,7 @@ func main() {
 					if err != nil {
 						fmt.Fprintf(os.Stderr, "Stat file `%s` error: %s", path, err.Error())
 					} else {
-						rename(path, fi)
+						rename(path, ext, fi)
 					}
 				}
 			}
@@ -84,8 +84,8 @@ func needProcess(filename string) bool {
 	return false
 }
 
-func rename(path string, fi fs.FileInfo) {
-	newPath := getNewFilepath(fi)
+func rename(path, ext string, fi fs.FileInfo) {
+	newPath := getNewFilepath(fi, ext)
 
 	i := 0
 	for {
@@ -105,9 +105,6 @@ func rename(path string, fi fs.FileInfo) {
 	}
 }
 
-func getNewFilepath(fi fs.FileInfo) string {
-	if fi != nil {
-		fmt.Printf("%s\n", fi.ModTime().Format("20060102150405"))
-	}
-	return ""
+func getNewFilepath(fi fs.FileInfo, ext string) string {
+	return fmt.Sprintf("%s.%s", fi.ModTime().Format("20060102150405"), ext)
 }
