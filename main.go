@@ -130,6 +130,14 @@ func rename(path, ext string, fi fs.FileInfo) {
 	err = os.Rename(path, newPath)
 	if err == nil {
 		fmt.Fprintf(os.Stdout, "Rename file `%s` to `%s` ok\n", path, newPath)
+		err = os.Chtimes(newPath, fi.ModTime(), fi.ModTime())
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Chtimes file `%s` error: %s\n", newPath, err.Error())
+		}
+		err = os.Chmod(newPath, fi.Mode())
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Chmod file `%s` error: %s\n", newPath, err.Error())
+		}
 	} else {
 		fmt.Fprintf(os.Stderr, "Rename file `%s` to `%s` error: %s\n", path, newPath, err.Error())
 	}
