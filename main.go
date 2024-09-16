@@ -43,7 +43,8 @@ func main() {
 				return err
 			}
 			if d.Type().IsDir() {
-				leafDir := filepath.Base(filepath.Dir(path))
+				tmpDir := filepath.Join(path, "xyz###123")
+				leafDir := filepath.Base(filepath.Dir(tmpDir))
 				if IsValidYYYYMMDD(leafDir) {
 					fmt.Fprintf(os.Stderr, "Directory `%s` is skipped\n", path)
 					return filepath.SkipDir
