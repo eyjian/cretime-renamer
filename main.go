@@ -3,7 +3,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -87,7 +86,11 @@ func needProcess(filename string) bool {
 
 func rename(path, ext string, fi fs.FileInfo) {
 	dir := filepath.Dir(path)
-	newPath := getNewFilepath(fi, ext, dir, 0)
+	newPath, err := getNewFilepath(fi, ext, dir, 0)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Rename file `%s` error: %s\n", path, err.Error())
+		return
+	}
 
 	idx := 1
 	for {
@@ -99,12 +102,16 @@ func rename(path, ext string, fi fs.FileInfo) {
 		if !exists {
 			break
 		} else {
-			newPath = getNewFilepath(fi, ext, dir, idx)
+			newPath, err = getNewFilepath(fi, ext, dir, idx)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Rename file `%s` error: %s\n", path, err.Error())
+				return
+			}
 			idx++
 		}
 	}
 
-	err := os.Rename(path, newPath)
+	err = os.Rename(path, newPath)
 	if err == nil {
 		fmt.Fprintf(os.Stdout, "Rename file `%s` to `%s` ok\n", path, newPath)
 	} else {
@@ -112,27 +119,49 @@ func rename(path, ext string, fi fs.FileInfo) {
 	}
 }
 
-func getNewFilepath(fi fs.FileInfo, ext, dir string, idx int) string {
+func getNewFilepath(fi fs.FileInfo, ext, dir string, idx int) (string, error) {
+	fileDir := dir
+	if *createYearDir {
+		year := fi.ModTime().Format("20060102")
+		yearDir := fmt.Sprintf("%s%c%s", dir, filepath.Separator, year)
+
+		err := os.Mkdir(yearDir, 0755)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Create directory `%s` error: %s\n", yearDir, err.Error())
+			return "", err
+		}
+	}
+
 	if idx < 1 {
-		return fmt.Sprintf("%s%c%s%s", dir, filepath.Separator, fi.ModTime().Format("20060102150405"), ext)
+		return fmt.Sprintf("%s%c%s%s", fileDir, filepath.Separator, fi.ModTime().Format("20060102150405"), ext), nil
 	} else {
-		return fmt.Sprintf("%s%c%s-%02d%s", dir, filepath.Separator, fi.ModTime().Format("20060102150405"), idx, ext)
+		return fmt.Sprintf("%s%c%s-%02d%s", fileDir, filepath.Separator, fi.ModTime().Format("20060102150405"), idx, ext), nil
 	}
 }
 
 func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
-	if err != nil {
-		var pathError *os.PathError
-		if errors.As(err, &pathError) && pathError.Op == "stat" {
-			if os.IsNotExist(pathError) {
-				return false, nil
-			}
-			if os.IsExist(pathError) {
-				return true, nil
-			}
-		}
-		return false, err
+	if err == nil {
+		return true, nil
 	}
-	return true, nil
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	// 其他错误
+	return false, err
+}
+
+func DirExists(path string) (bool, error) {
+	st, err := os.Stat(path)
+	if err == nil {
+		if st.IsDir() {
+			return true, nil
+		}
+		return false, fmt.Errorf("not a directory")
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	// 其他错误
+	return false, err
 }
