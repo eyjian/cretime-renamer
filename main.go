@@ -85,7 +85,8 @@ func needProcess(filename string) bool {
 }
 
 func rename(path, ext string, fi fs.FileInfo) {
-	newPath := getNewFilepath(fi, ext)
+	dir := filepath.Dir(path)
+	newPath := getNewFilepath(fi, ext, dir)
 
 	i := 0
 	for {
@@ -105,6 +106,6 @@ func rename(path, ext string, fi fs.FileInfo) {
 	}
 }
 
-func getNewFilepath(fi fs.FileInfo, ext string) string {
-	return fmt.Sprintf("%s.%s", fi.ModTime().Format("20060102150405"), ext)
+func getNewFilepath(fi fs.FileInfo, ext, dir string) string {
+	return fmt.Sprintf("%s%s.%s", dir, fi.ModTime().Format("20060102150405"), ext)
 }
