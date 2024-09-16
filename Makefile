@@ -18,7 +18,7 @@ endif
 .PHONY: clean
 
 clean:
-	rm -f ${target
+	rm -f ${target}
 
 install: ${target}
 ifeq ($(OS),Windows_NT)
