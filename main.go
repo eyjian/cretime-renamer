@@ -8,8 +8,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
+	"time"
 )
 
 var (
@@ -131,7 +131,7 @@ func getNewFilepath(fi fs.FileInfo, ext, dir string, idx int) (string, error) {
 	fileDir := dir
 
 	if *createYearDir {
-		year := fi.ModTime().Format("20060102")
+		year := fi.ModTime().Format("2006")
 		fileDir = fmt.Sprintf("%s%c%s", dir, filepath.Separator, year)
 		exists, err := DirExists(fileDir)
 		if err != nil {
@@ -142,6 +142,22 @@ func getNewFilepath(fi fs.FileInfo, ext, dir string, idx int) (string, error) {
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Create directory `%s` error: %s\n", fileDir, err.Error())
 				return "", err
+			}
+		}
+
+		if *createMonthDir {
+			yearMonth := fi.ModTime().Format("200601")
+			fileDir = fmt.Sprintf("%s%c%s%c%s", dir, filepath.Separator, year, filepath.Separator, yearMonth)
+			exists, err = DirExists(fileDir)
+			if err != nil {
+				return "", err
+			}
+			if !exists {
+				err = os.MkdirAll(fileDir, 0755)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Create directory `%s` error: %s\n", fileDir, err.Error())
+					return "", err
+				}
 			}
 		}
 	}
@@ -181,8 +197,16 @@ func DirExists(path string) (bool, error) {
 }
 
 func IsValidYYYYMMDD(s string) bool {
-	// 正则表达式匹配 YYYY、YYYYMM 或 YYYYMMDD
-	pattern := `^(\d{4})(\d{2})(\d{2})?$`
-	re := regexp.MustCompile(pattern)
-	return re.MatchString(s)
+	var err error
+
+	l := len(s)
+	if l == 4 {
+		_, err = time.Parse("2006", s)
+	} else if l == 6 {
+		_, err = time.Parse("200601", s)
+	} else {
+		_, err = time.Parse("20060102", s)
+	}
+
+	return err == nil
 }
