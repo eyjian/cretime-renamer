@@ -124,8 +124,13 @@ func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err != nil {
 		var pathError *os.PathError
-		if errors.As(err, &pathError) && pathError.Op == "stat" && pathError.Err == os.ErrExist {
-			return false, nil
+		if errors.As(err, &pathError) && pathError.Op == "stat" {
+			if os.IsNotExist(pathError) {
+				return false, nil
+			}
+			if os.IsExist(pathError) {
+				return true, nil
+			}
 		}
 		return false, err
 	}
