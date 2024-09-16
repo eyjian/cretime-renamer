@@ -124,7 +124,7 @@ func getNewFilepath(fi fs.FileInfo, ext, dir string, idx int) (string, error) {
 
 	if *createYearDir {
 		year := fi.ModTime().Format("20060102")
-		fileDir := fmt.Sprintf("%s%c%s", dir, filepath.Separator, year)
+		fileDir = fmt.Sprintf("%s%c%s", dir, filepath.Separator, year)
 		exists, err := DirExists(fileDir)
 		if err != nil {
 			return "", err
