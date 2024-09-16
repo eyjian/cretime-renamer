@@ -30,6 +30,9 @@ var (
 	// 仅当 create-year-dir 或 create-month-dir 为 true 时有作用
 	// 如果为 false，则年份目录会创建在同文件同级的目录
 	siblingDirectory = flag.Bool("sibling-dir", false, "Create directory by year in the sibling directory.")
+
+	// 需要忽略的目录列表
+	ignoreDirs = flag.String("ignore-dirs", "", "Directory ignored.")
 )
 
 func main() {
@@ -41,6 +44,9 @@ func main() {
 
 	// 得到目录数组
 	dirArray := strings.Split(*dirs, ",")
+
+	// 被忽略的目录数组
+	ignoreDirArray := strings.Split(*ignoreDirs, ",")
 
 	// 处理所有目录
 	for _, dir := range dirArray {
@@ -55,6 +61,10 @@ func main() {
 				leafDir := filepath.Base(filepath.Dir(tmpDir))
 				if IsValidYYYYMMDD(leafDir) {
 					fmt.Fprintf(os.Stderr, "Directory `%s` is skipped\n", path)
+					return filepath.SkipDir
+				}
+				if isIgnoredDirs(ignoreDirArray, path) {
+					fmt.Fprintf(os.Stderr, "Directory `%s` is ignored\n", path)
 					return filepath.SkipDir
 				}
 			} else if d.Type().IsRegular() {
@@ -230,4 +240,14 @@ func IsValidYYYYMMDD(s string) bool {
 	}
 
 	return err == nil
+}
+
+func isIgnoredDirs(ignoredDirArray []string, dir string) bool {
+	for _, ignoredDir := range ignoredDirArray {
+		if ignoredDir == dir {
+			return true
+		}
+	}
+
+	return false
 }
