@@ -242,23 +242,24 @@ func IsValidYYYYMMDDhhmmss(s string) bool {
 		return false
 	}
 
-	_, err := time.Parse("20060102150405", s)
-	return err == nil
+	t, err := time.Parse("20060102150405", s)
+	return err == nil && t.Year() >= 1978
 }
 
 func IsValidYYYYMMDD(s string) bool {
 	var err error
+	var t time.Time
 
 	l := len(s)
 	if l == 4 {
-		_, err = time.Parse("2006", s)
+		t, err = time.Parse("2006", s)
 	} else if l == 6 {
-		_, err = time.Parse("200601", s)
+		t, err = time.Parse("200601", s)
 	} else {
-		_, err = time.Parse("20060102", s)
+		t, err = time.Parse("20060102", s)
 	}
 
-	return err == nil
+	return err == nil && t.Year() >= 1978
 }
 
 func isIgnoredDirs(ignoredDirArray []string, dir string) bool {
