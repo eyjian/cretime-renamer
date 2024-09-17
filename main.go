@@ -34,6 +34,9 @@ var (
 
 	// 需要忽略的目录列表
 	ignoreDirs = flag.String("ignore-dirs", "", "Directory ignored.")
+
+	// 跳过日期目录（仅 create-year-dir 或 create-month-dir 均为 true 时有效）
+	skipDateDir = flag.Bool("skip-date-dir", true, "Skip date directory.")
 )
 
 func main() {
@@ -60,7 +63,7 @@ func main() {
 			if d.Type().IsDir() {
 				tmpDir := filepath.Join(path, "xyz-###-123")
 				leafDir := filepath.Base(filepath.Dir(tmpDir))
-				if IsValidYYYYMMDD(leafDir) {
+				if isSkippedDir(leafDir) {
 					fmt.Fprintf(os.Stderr, "Directory `%s` is skipped\n", path)
 					return filepath.SkipDir
 				}
@@ -269,6 +272,15 @@ func isIgnoredDirs(ignoredDirArray []string, dir string) bool {
 		}
 	}
 
+	return false
+}
+
+func isSkippedDir(dir string) bool {
+	if IsValidYYYYMMDD(dir) {
+		if *createMonthDir || *createYearDir {
+			return *skipDateDir
+		}
+	}
 	return false
 }
 
