@@ -54,6 +54,11 @@ func main() {
 
 	// 处理所有目录
 	for _, dir := range dirArray {
+		dir = strings.TrimSpace(dir)
+		if dir == "" {
+			continue
+		}
+
 		// 遍历指定目录
 		err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 			if err != nil {
@@ -111,6 +116,10 @@ func needProcess(filename string) bool {
 	ext := strings.ToLower(filepath.Ext(filename))
 	suffixArray := strings.Split(*suffixes, ",")
 	for _, suffix := range suffixArray {
+		suffix = strings.TrimSpace(suffix)
+		if suffix == "" {
+			continue
+		}
 		if ext == "."+suffix {
 			return true
 		}
