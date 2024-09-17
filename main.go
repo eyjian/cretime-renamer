@@ -69,13 +69,17 @@ func main() {
 					return filepath.SkipDir
 				}
 			} else if d.Type().IsRegular() {
-				ext := filepath.Ext(path)
-				if needProcess(ext) {
-					fi, err := d.Info()
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "Stat file `%s` error: %s", path, err.Error())
-					} else {
-						rename(path, ext, fi)
+				if notNeedProcess(path) {
+					fmt.Fprintf(os.Stderr, "Path `%s` need not been processed\n", path)
+				} else {
+					ext := filepath.Ext(path)
+					if needProcess(ext) {
+						fi, err := d.Info()
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "Stat file `%s` error: %s", path, err.Error())
+						} else {
+							rename(path, ext, fi)
+						}
 					}
 				}
 			}
@@ -109,6 +113,11 @@ func needProcess(filename string) bool {
 		}
 	}
 	return false
+}
+
+func notNeedProcess(path string) bool {
+	shortname := GetFileNameWithoutExtension(path)
+	return IsValidYYYYMMDDhhmmss(shortname)
 }
 
 func rename(path, ext string, fi fs.FileInfo) {
@@ -228,6 +237,15 @@ func DirExists(path string) (bool, error) {
 	return false, err
 }
 
+func IsValidYYYYMMDDhhmmss(s string) bool {
+	if len(s) != 14 {
+		return false
+	}
+
+	_, err := time.Parse("20060102150405", s)
+	return err == nil
+}
+
 func IsValidYYYYMMDD(s string) bool {
 	var err error
 
@@ -251,4 +269,10 @@ func isIgnoredDirs(ignoredDirArray []string, dir string) bool {
 	}
 
 	return false
+}
+
+func GetFileNameWithoutExtension(path string) string {
+	base := filepath.Base(path)
+	fileName := strings.TrimSuffix(base, filepath.Ext(base))
+	return fileName
 }
